@@ -1,0 +1,7 @@
+start,44,238
+left,Data/level1-1.csv
+right,Data/level1-3.csv
+rect,0,0,600,90
+rect,0,270,120,180
+rect,240,270,120,180
+rect,480,270,120,180
