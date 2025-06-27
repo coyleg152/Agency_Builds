@@ -1,0 +1,29 @@
+// File: agency_log.txt
+
+Day 1:
+- Started using Pygame
+- Followed the example script to make a rectangle move on screen
+
+Day 2:
+- Used image.load and blit to add a sprite for the player
+
+Day 3:
+- Implemented gravity and jumping
+
+Day 4:
+- Added a basic level
+- Implemented wall and ground collision
+- Walking off of a surface also triggers gravity
+
+Day 5:
+- Implemented reading level data from csv files
+
+Day 6:
+- Added a game over screen if the player falls below the visible area
+
+Day 7:
+- Level files can now hold more types of data than just surface coordinates
+- Implemented traveling between levels
+
+Day 8:
+- Added ceiling collision
