@@ -16,6 +16,7 @@ Day 4:
 - Walking off of a surface also triggers gravity
 
 Day 5:
+- Added another basic level
 - Implemented reading level data from csv files
 
 Day 6:
@@ -26,4 +27,40 @@ Day 7:
 - Implemented traveling between levels
 
 Day 8:
+- Started working on level 1-3
 - Added ceiling collision
+
+Day 9:
+- Implemented different starting points depending on how the level is loaded
+
+Day 10:
+- Added a walking animation for the character via a sprite sheet
+
+Day 11:
+- Player collision box is now rectangular rather than square
+- Added one-way platforms
+
+Day 12:
+- Walking animation now flips left/right depending on direction
+- Added empty cells that the player can use as "hidey holes"
+
+Day 13:
+- You can now restart from the game over screen, sending you back to level 1
+
+Day 14:
+- Added animated enemies that can walk in both directions
+
+Day 15:
+- Boundaries can now be specified for each enemy's left/right movement
+- Entering an enemy's LoS now triggers a game over unless you are hidden
+
+Day 16:
+- Started working on level 1-4
+- Switching the starting level now automatically changes the spawn point
+
+Day 17:
+- Implemented a spike trap that toggles between active and inactive
+- Used draw.polygon() to allow for different spike trap sizes
+
+Day 18:
+- Added vision boundaries for enemies as well as visual sightlines
