@@ -1,6 +1,6 @@
 start,44,238
-left,Data/level1-1.csv
-right,Data/level1-3.csv
+left,Data/level1-1.csv,540,238
+right,Data/level1-3.csv,44,238
 rect,0,0,600,90
 rect,0,270,120,180
 rect,240,270,120,180

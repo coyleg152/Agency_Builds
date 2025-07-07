@@ -1,7 +1,7 @@
 start,269,328
-right,Data/level1-2.csv
+right,Data/level1-2.csv,44,238
 rect,0,0,123,363
 rect,0,360,363,90
-rect,120,0,480,90
-rect,120,270,93,93
+rect,120,0,480,153
+rect,120,150,120,90
 rect,360,270,240,180
