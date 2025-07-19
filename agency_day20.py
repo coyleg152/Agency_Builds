@@ -1,10 +1,11 @@
-# File: agency_day18.py
+# File: agency_day20.py
 import pygame
 from enemies import PrisonGuard
 from objects import SpikeTrap
 
 W_LENGTH = 600
 W_HEIGHT = 450
+FRAMERATE = 30
 LINE_PX = 3
 STARTING_LEVEL = "Data/level1-4.csv"
 
@@ -172,13 +173,30 @@ while is_running:
                 if event.type == pygame.QUIT:
                     is_running = False
             keys = pygame.key.get_pressed()
+            if keys[pygame.K_q]:
+                is_running = False
             if keys[pygame.K_r]:
                 left_load, left_x, left_y, right_load, right_x, right_y \
                 = load_level(STARTING_LEVEL)
                 x_pos, y_pos = get_startpos(STARTING_LEVEL)
                 is_gameover = False
                 break
-            delta = clock.tick(30) / 1000
+            delta = clock.tick(FRAMERATE) / 1000
+
+    if keys[pygame.K_SPACE] and is_grounded and not is_hidden:
+        is_grounded = False
+        fall_speed = -JUMP_VELOCITY
+        y_pos += fall_speed * delta
+
+    if keys[pygame.K_UP] and is_grounded:
+        for cell in cells:
+            if (x_pos + 4 > cell.left and x_pos + P_LENGTH < cell.right + 4 \
+            and y_pos > cell.top and y_pos + P_HEIGHT < cell.bottom + 4):
+                x_pos = cell.left + cell.width // 2 - P_LENGTH // 2
+                animation = 2
+                anim_frame = 0
+                is_hidden = True
+                break
 
     if is_grounded:
         is_grounded = False
@@ -192,13 +210,11 @@ while is_running:
     if not is_grounded:
         fall_speed += GRAVITY * delta
         y_pos += fall_speed * delta
-        if y_pos > W_HEIGHT:
-            is_gameover = True
 
         if fall_speed > 0:
             for platform in (level + planks):
                 if (y_pos + P_HEIGHT >= platform.top \
-                and y_pos < platform.top \
+                and y_pos + P_HEIGHT - fall_speed * delta <= platform.top \
                 and x_pos + P_LENGTH > platform.left \
                 and x_pos < platform.right):
                     is_grounded = True
@@ -211,8 +227,11 @@ while is_running:
                 and y_pos + P_HEIGHT > terrain.bottom \
                 and x_pos + P_LENGTH > terrain.left \
                 and x_pos < terrain.right):
-                    fall_speed *= -0.5
+                    fall_speed *= -0.4
                     y_pos = terrain.bottom
+
+        if y_pos > W_HEIGHT:
+            is_gameover = True
 
     if keys[pygame.K_LEFT]:
         x_pos -= MOVE_SPEED * delta
@@ -269,21 +288,6 @@ while is_running:
         anim_frame = 0
         frame_delay = MAX_FRAME_DELAY
 
-    if keys[pygame.K_SPACE] and is_grounded and not is_hidden:
-        is_grounded = False
-        fall_speed = -JUMP_VELOCITY
-        y_pos += fall_speed * delta
-
-    if keys[pygame.K_UP] and is_grounded:
-        for cell in cells:
-            if (x_pos + 4 > cell.left and x_pos + P_LENGTH < cell.right + 4 \
-            and y_pos > cell.top and y_pos + P_HEIGHT < cell.bottom + 4):
-                x_pos = cell.left + cell.width // 2 - P_LENGTH // 2
-                animation = 2
-                anim_frame = 0
-                is_hidden = True
-                break
-
     for spike in spikes:
         spike.delay -= delta
         if spike.delay <= 0.0:
@@ -318,6 +322,6 @@ while is_running:
                 is_gameover = not is_hidden
 
     pygame.display.flip()
-    delta = clock.tick(30) / 1000
+    delta = clock.tick(FRAMERATE) / 1000
 
 pygame.quit()

@@ -12,7 +12,7 @@ clock = pygame.time.Clock()
 is_running = True
 delta = 0
 
-character = pygame.image.load("Images/PixelGarchomp.png")
+character = pygame.image.load("Images/Placeholder.png")
 x_pos = W_LENGTH // 2 - 16
 y_pos = W_HEIGHT // 2 - 16
 ground = pygame.Rect(0, 4 * W_HEIGHT // 5, W_LENGTH, W_HEIGHT // 5)

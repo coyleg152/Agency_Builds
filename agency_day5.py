@@ -15,7 +15,7 @@ clock = pygame.time.Clock()
 is_running = True
 delta = 0
 
-character = pygame.image.load("Images/PixelGarchomp.png")
+character = pygame.image.load("Images/Placeholder.png")
 x_pos = (W_LENGTH - PLAYER_SIZE) // 2
 y_pos = (W_HEIGHT - PLAYER_SIZE) // 2
 fall_speed = 0

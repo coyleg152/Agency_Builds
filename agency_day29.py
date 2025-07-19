@@ -1,12 +1,15 @@
-# File: agency_day18.py
+# File: agency_day29.py
 import pygame
 from enemies import PrisonGuard
 from objects import SpikeTrap
+from objects import Checkpoint
 
 W_LENGTH = 600
 W_HEIGHT = 450
+FRAMERATE = 30
 LINE_PX = 3
-STARTING_LEVEL = "Data/level1-4.csv"
+SIGHTLINE_ON_FRAMES = 24
+SIGHTLINE_OFF_FRAMES = 6
 
 P_LENGTH = 14
 P_HEIGHT = 32
@@ -36,24 +39,55 @@ is_running = True
 is_gameover = False
 delta = 0.0
 
+bg_image = pygame.image.load("Images/TitleScreen.png")
+screen.blit(bg_image, (0, 0, W_LENGTH, W_HEIGHT))
+pygame.display.flip()
+pygame.mixer.music.load("Audio/AgencyTitle.ogg")
+pygame.mixer.music.play()
+
+while is_running:
+    if not pygame.mixer.music.get_busy():
+        pygame.mixer.music.play()
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            is_running = False
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_q]:
+        is_running = False
+    if keys[pygame.K_SPACE]:
+        break
+    delta = clock.tick(FRAMERATE) / 1000
+
+starting_level = "Data/level1-4.csv"
 character = pygame.image.load("Images/CrystalWalking.png")
 animation = 0
 anim_frame = 0
 frame_delay = MAX_FRAME_DELAY
-x_pos, y_pos = get_startpos(STARTING_LEVEL)
+x_pos, y_pos = get_startpos(starting_level)
 fall_speed = 0
 is_grounded = False
 is_hidden = False
+
+flag = Checkpoint()
+flag.level = "Data/level1-3.csv"
+flag.length = 20
+flag.height = 36
 
 enemy_image = pygame.image.load("Images/PrisonGuard.png")
 enemy_length = 14
 enemy_height = 28
 enemy_vh = 14
 enemy_speed = 80
+sightline_on = True
+sightline_delay = SIGHTLINE_ON_FRAMES
 
+bg_image = pygame.image.load("Images/PrisonBG.png")
+terrain_image = pygame.image.load("Images/PrisonTerrain.png")
+plank_image = pygame.image.load("Images/Plank.png")
 level = []
 planks = []
 cells = []
+exits = []
 spikes = []
 enemies = []
 left_load = "X"
@@ -70,8 +104,10 @@ def load_level(filename):
     level.clear()
     planks.clear()
     cells.clear()
+    exits.clear()
     spikes.clear()
     enemies.clear()
+    flag.visible = False
     l_file = "X"
     l_x = 0
     l_y = 0
@@ -97,6 +133,13 @@ def load_level(filename):
             enemies.append(PrisonGuard(int(data[1]), int(data[2]), \
             int(data[3]), int(data[4]), int(data[5]), \
             int(data[6]), int(data[7])))
+        elif data[0] == "exit":
+            exits.append(pygame.Rect(int(data[1]), \
+            int(data[2]), int(data[3]), int(data[4])))
+        elif data[0] == "flag":
+            flag.x = int(data[1])
+            flag.y = int(data[2])
+            flag.visible = True
         elif data[0] == "left":
             l_file = data[1]
             l_x = int(data[2])
@@ -108,19 +151,46 @@ def load_level(filename):
     return l_file, l_x, l_y, r_file, r_x, r_y
 
 left_load, left_x, left_y, right_load, right_x, right_y \
-= load_level(STARTING_LEVEL)
+= load_level(starting_level)
+pygame.mixer.music.stop()
+pygame.mixer.music.load("Audio/ThePrisoner.ogg")
+pygame.mixer.music.play()
+
+def draw_flag(screen, flag, LINE_PX):
+    if flag.activated:
+        pygame.draw.polygon(screen, "#00FFFF", \
+        ((flag.x + flag.length // 2, flag.y), \
+        (flag.x + flag.length, flag.y + flag.height // 2), \
+        (flag.x + flag.length // 2, flag.y + flag.height), \
+        (flag.x, flag.y + flag.height // 2)))
+        pygame.draw.polygon(screen, "#00C0FF", \
+        ((flag.x + flag.length // 2, flag.y), \
+        (flag.x + flag.length, flag.y + flag.height // 2), \
+        (flag.x + flag.length // 2, flag.y + flag.height), \
+        (flag.x, flag.y + flag.height // 2)), width=LINE_PX)
+    else:
+        pygame.draw.polygon(screen, "#0000C0", \
+        ((flag.x + flag.length // 2, flag.y), \
+        (flag.x + flag.length, flag.y + flag.height // 2), \
+        (flag.x + flag.length // 2, flag.y + flag.height), \
+        (flag.x, flag.y + flag.height // 2)))
+        pygame.draw.polygon(screen, "#000080", \
+        ((flag.x + flag.length // 2, flag.y), \
+        (flag.x + flag.length, flag.y + flag.height // 2), \
+        (flag.x + flag.length // 2, flag.y + flag.height), \
+        (flag.x, flag.y + flag.height // 2)), width=LINE_PX)
 
 def draw_spikes(screen, spike, LINE_PX):
     offset = spike.length // 8
     if spike.state == 0:
         for i in range(4):
-            pygame.draw.polygon(screen, "#A0A0A0", \
+            pygame.draw.polygon(screen, "#606060", \
             ((spike.x + offset * 2 * i, spike.y + spike.height), \
             (spike.x + offset * 2 * i + offset, spike.y), \
             (spike.x + offset * 2 * (i + 1), spike.y + spike.height)))
     else:
         for i in range(4):
-            pygame.draw.polygon(screen, "#606060", \
+            pygame.draw.polygon(screen, "#E00000", \
             ((spike.x + offset * 2 * i, spike.y + spike.height), \
             (spike.x + offset * 2 * i + offset, spike.y), \
             (spike.x + offset * 2 * (i + 1), spike.y + spike.height)))
@@ -131,38 +201,58 @@ def draw_spikes(screen, spike, LINE_PX):
             width=LINE_PX)
 
 while is_running:
+    if not pygame.mixer.music.get_busy():
+        pygame.mixer.music.play()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             is_running = False
 
-    screen.fill("#B8B8B8")
-    for cell in cells:
-        pygame.draw.rect(screen, "#808080", cell)
+    screen.blit(bg_image, (0, 0, W_LENGTH, W_HEIGHT))
+    if flag.visible:
+        draw_flag(screen, flag, LINE_PX)
     for spike in spikes:
         draw_spikes(screen, spike, LINE_PX)
-    screen.blit(character, (x_pos, y_pos), \
-    (P_LENGTH * anim_frame, P_HEIGHT * animation, P_LENGTH , P_HEIGHT))
-    for enemy in enemies:
-        if enemy.direction == 1:
-            pygame.draw.rect(screen, "#FFFF80", (enemy.x + enemy_length, \
-            enemy.y, enemy.r_sight - enemy.x - enemy_length, enemy_vh))
-        else:
-            pygame.draw.rect(screen, "#FFFF80", (enemy.l_sight, \
-            enemy.y, enemy.x - enemy.l_sight, enemy_vh))
+    for door in exits:
+        pygame.draw.rect(screen, "#FFC000", door)
+        pygame.draw.polygon(screen, "#FF8000", ((door.left, door.top), \
+        (door.left, door.bottom), (door.left - door.width, door.bottom)))
+        pygame.draw.rect(screen, "#FF8000", door, width=LINE_PX)
+    for cell in cells:
+        pygame.draw.rect(screen, "#404040", cell)
+    if is_hidden:
+        screen.blit(character, (x_pos, y_pos), \
+        (P_LENGTH * anim_frame, P_HEIGHT * animation, P_LENGTH , P_HEIGHT))
+    for cell in cells:
+        pygame.draw.rect(screen, "#606060", cell, width=LINE_PX)
+    if not is_hidden:
+        screen.blit(character, (x_pos, y_pos), \
+        (P_LENGTH * anim_frame, P_HEIGHT * animation, P_LENGTH , P_HEIGHT))
+    if sightline_on:
+        for enemy in enemies:
+            if enemy.direction == 1:
+                pygame.draw.rect(screen, "#FFFF80", \
+                (enemy.x + enemy_length, enemy.y, \
+                enemy.r_sight - enemy.x - enemy_length, enemy_vh))
+            else:
+                pygame.draw.rect(screen, "#FFFF80", (enemy.l_sight, \
+                enemy.y, enemy.x - enemy.l_sight, enemy_vh))
     for enemy in enemies:
         screen.blit(enemy_image, (enemy.x, enemy.y), \
         (enemy_length * enemy.anim_frame, enemy_height * enemy.animation, \
         enemy_length, enemy_height))
     for terrain in level:
-        pygame.draw.rect(screen, "#B80000", terrain)
+        screen.blit(terrain_image, terrain, \
+        (0, 0, terrain.width, terrain.height))
         pygame.draw.rect(screen, "#000000", terrain, width=LINE_PX)
     for plank in planks:
-        pygame.draw.rect(screen, "#804000", plank)
+        screen.blit(plank_image, plank, \
+        (0, 0, plank.width, plank.height))
         pygame.draw.rect(screen, "#000000", plank, width=LINE_PX)
     keys = pygame.key.get_pressed()
 
     if is_gameover:
+        pygame.mixer.music.stop()
         game_over = pygame.image.load("Images/GameOver.png")
         screen.blit(game_over, (W_LENGTH // 2 - 99, W_HEIGHT // 2 - 54))
         pygame.display.flip()
@@ -172,13 +262,36 @@ while is_running:
                 if event.type == pygame.QUIT:
                     is_running = False
             keys = pygame.key.get_pressed()
+            if keys[pygame.K_q]:
+                is_running = False
             if keys[pygame.K_r]:
                 left_load, left_x, left_y, right_load, right_x, right_y \
-                = load_level(STARTING_LEVEL)
-                x_pos, y_pos = get_startpos(STARTING_LEVEL)
+                = load_level(starting_level)
+                x_pos, y_pos = get_startpos(starting_level)
+                pygame.mixer.music.play()
                 is_gameover = False
                 break
-            delta = clock.tick(30) / 1000
+            delta = clock.tick(FRAMERATE) / 1000
+
+    if keys[pygame.K_SPACE] and is_grounded:
+        if is_hidden:
+            is_hidden = False
+            animation = 0
+            anim_frame = 0
+            frame_delay = MAX_FRAME_DELAY
+        is_grounded = False
+        fall_speed = -JUMP_VELOCITY
+        y_pos += fall_speed * delta
+
+    if keys[pygame.K_UP] and is_grounded:
+        for cell in cells:
+            if (x_pos + 4 > cell.left and x_pos + P_LENGTH < cell.right + 4 \
+            and y_pos > cell.top and y_pos + P_HEIGHT < cell.bottom + 4):
+                x_pos = cell.left + cell.width // 2 - P_LENGTH // 2
+                animation = 2
+                anim_frame = 0
+                is_hidden = True
+                break
 
     if is_grounded:
         is_grounded = False
@@ -192,13 +305,11 @@ while is_running:
     if not is_grounded:
         fall_speed += GRAVITY * delta
         y_pos += fall_speed * delta
-        if y_pos > W_HEIGHT:
-            is_gameover = True
 
         if fall_speed > 0:
             for platform in (level + planks):
                 if (y_pos + P_HEIGHT >= platform.top \
-                and y_pos < platform.top \
+                and y_pos + P_HEIGHT - fall_speed * delta <= platform.top \
                 and x_pos + P_LENGTH > platform.left \
                 and x_pos < platform.right):
                     is_grounded = True
@@ -211,8 +322,11 @@ while is_running:
                 and y_pos + P_HEIGHT > terrain.bottom \
                 and x_pos + P_LENGTH > terrain.left \
                 and x_pos < terrain.right):
-                    fall_speed *= -0.5
+                    fall_speed *= -0.4
                     y_pos = terrain.bottom
+
+        if y_pos > W_HEIGHT:
+            is_gameover = True
 
     if keys[pygame.K_LEFT]:
         x_pos -= MOVE_SPEED * delta
@@ -269,20 +383,19 @@ while is_running:
         anim_frame = 0
         frame_delay = MAX_FRAME_DELAY
 
-    if keys[pygame.K_SPACE] and is_grounded and not is_hidden:
-        is_grounded = False
-        fall_speed = -JUMP_VELOCITY
-        y_pos += fall_speed * delta
+    sightline_delay -= 1
+    if sightline_delay <= 0:
+        sightline_on = not sightline_on
+        if sightline_on:
+            sightline_delay = SIGHTLINE_ON_FRAMES
+        else:
+            sightline_delay = SIGHTLINE_OFF_FRAMES
 
-    if keys[pygame.K_UP] and is_grounded:
-        for cell in cells:
-            if (x_pos + 4 > cell.left and x_pos + P_LENGTH < cell.right + 4 \
-            and y_pos > cell.top and y_pos + P_HEIGHT < cell.bottom + 4):
-                x_pos = cell.left + cell.width // 2 - P_LENGTH // 2
-                animation = 2
-                anim_frame = 0
-                is_hidden = True
-                break
+    if flag.visible and not flag.activated:
+        if x_pos < flag.x + flag.length and x_pos + P_LENGTH > flag.x \
+        and y_pos < flag.y + flag.height and y_pos + P_HEIGHT > flag.y:
+            starting_level = flag.level
+            flag.activated = True
 
     for spike in spikes:
         spike.delay -= delta
@@ -310,14 +423,17 @@ while is_running:
         else:
             enemy.frame_delay -= 1
 
-        if y_pos < enemy.y + enemy_vh and y_pos + P_HEIGHT > enemy.y:
+        if y_pos < enemy.y + enemy_vh and y_pos + P_HEIGHT > enemy.y \
+        and not is_hidden:
             if (enemy.direction == -1 and x_pos < enemy.x \
             and x_pos + P_LENGTH > enemy.l_sight) or (enemy.direction == 1 \
             and x_pos + P_LENGTH > enemy.x + enemy_length \
             and x_pos < enemy.r_sight):
-                is_gameover = not is_hidden
-
+                sightline_on = True
+                is_gameover = True
+        
     pygame.display.flip()
-    delta = clock.tick(30) / 1000
+    delta = clock.tick(FRAMERATE) / 1000
 
+pygame.mixer.music.stop()
 pygame.quit()

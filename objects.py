@@ -9,3 +9,13 @@ class SpikeTrap():
         self.state = init_state
         self.max_delay = _max
         self.delay = init_delay
+
+class Checkpoint():
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+        self.length = 0
+        self.height = 0
+        self.visible = False
+        self.activated = False
+        self.level = "X"

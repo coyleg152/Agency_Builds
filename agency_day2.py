@@ -11,7 +11,7 @@ clock = pygame.time.Clock()
 is_running = True
 delta = 0
 
-character = pygame.image.load("Images/PixelGarchomp.png")
+character = pygame.image.load("Images/Placeholder.png")
 player = pygame.Rect(W_LENGTH / 2 - RAD, W_HEIGHT / 2 - RAD, RAD * 2, RAD * 2)
 
 while is_running:

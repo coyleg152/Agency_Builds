@@ -57,10 +57,53 @@ Day 15:
 Day 16:
 - Started working on level 1-4
 - Switching the starting level now automatically changes the spawn point
+- Fixed a bug that allowed players to jump while hidden
 
 Day 17:
 - Implemented a spike trap that toggles between active and inactive
-- Used draw.polygon() to allow for different spike trap sizes
+- Used draw.polygon to allow for different spike trap sizes
 
 Day 18:
-- Added vision boundaries for enemies as well as visual sightlines
+- Added vision boundaries for enemies as well as visual LoS
+
+Day 19:
+- Fixed an issue with ground collision on planks
+
+Day 20:
+- Fixed ground collision on planks again
+- Fixed the player not touching the ground when repeatedly jumping
+
+Day 21:
+- Added a texture for the level terrain
+
+Day 22:
+- Added level 1-1a
+- You can now jump to exit the hidden state
+
+Day 23:
+- Added a texture for the background
+
+Day 24:
+- Implemented a checkpoint that changes the starting level when activated
+
+Day 25:
+- Fixed a visual bug relating to cells
+- Enemy sightlines now blink, allowing the player to see more of the level
+
+Day 26:
+- Added background music
+
+Day 27:
+- Music now restarts when playback ends
+- Added title screen with new music
+
+Day 28:
+- Added a texture for planks
+
+Day 29:
+- Added level 1-5
+- Added level 1-6 with an exit door
+
+Day 30:
+- Added victory screen that appears upon using the exit door
+- Fixed a bug where jumping out of the hidden state could avoid enemy LoS

@@ -1,4 +1,4 @@
-# File: agency_day18.py
+# File: agency_day19.py
 import pygame
 from enemies import PrisonGuard
 from objects import SpikeTrap
@@ -198,7 +198,7 @@ while is_running:
         if fall_speed > 0:
             for platform in (level + planks):
                 if (y_pos + P_HEIGHT >= platform.top \
-                and y_pos < platform.top \
+                and y_pos + P_HEIGHT < platform.bottom \
                 and x_pos + P_LENGTH > platform.left \
                 and x_pos < platform.right):
                     is_grounded = True
@@ -211,7 +211,7 @@ while is_running:
                 and y_pos + P_HEIGHT > terrain.bottom \
                 and x_pos + P_LENGTH > terrain.left \
                 and x_pos < terrain.right):
-                    fall_speed *= -0.5
+                    fall_speed *= -0.4
                     y_pos = terrain.bottom
 
     if keys[pygame.K_LEFT]:

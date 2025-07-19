@@ -1,10 +1,11 @@
-# File: agency_day18.py
+# File: agency_day23.py
 import pygame
 from enemies import PrisonGuard
 from objects import SpikeTrap
 
 W_LENGTH = 600
 W_HEIGHT = 450
+FRAMERATE = 30
 LINE_PX = 3
 STARTING_LEVEL = "Data/level1-4.csv"
 
@@ -51,6 +52,8 @@ enemy_height = 28
 enemy_vh = 14
 enemy_speed = 80
 
+terrain_image = pygame.image.load("Images/PrisonTerrain.png")
+bg_image = pygame.image.load("Images/PrisonBG.png")
 level = []
 planks = []
 cells = []
@@ -114,13 +117,13 @@ def draw_spikes(screen, spike, LINE_PX):
     offset = spike.length // 8
     if spike.state == 0:
         for i in range(4):
-            pygame.draw.polygon(screen, "#A0A0A0", \
+            pygame.draw.polygon(screen, "#606060", \
             ((spike.x + offset * 2 * i, spike.y + spike.height), \
             (spike.x + offset * 2 * i + offset, spike.y), \
             (spike.x + offset * 2 * (i + 1), spike.y + spike.height)))
     else:
         for i in range(4):
-            pygame.draw.polygon(screen, "#606060", \
+            pygame.draw.polygon(screen, "#E00000", \
             ((spike.x + offset * 2 * i, spike.y + spike.height), \
             (spike.x + offset * 2 * i + offset, spike.y), \
             (spike.x + offset * 2 * (i + 1), spike.y + spike.height)))
@@ -136,13 +139,15 @@ while is_running:
         if event.type == pygame.QUIT:
             is_running = False
 
-    screen.fill("#B8B8B8")
-    for cell in cells:
-        pygame.draw.rect(screen, "#808080", cell)
+    screen.blit(bg_image, (0, 0, W_LENGTH, W_HEIGHT))
     for spike in spikes:
         draw_spikes(screen, spike, LINE_PX)
+    for cell in cells:
+        pygame.draw.rect(screen, "#404040", cell)
     screen.blit(character, (x_pos, y_pos), \
     (P_LENGTH * anim_frame, P_HEIGHT * animation, P_LENGTH , P_HEIGHT))
+    for cell in cells:
+        pygame.draw.rect(screen, "#606060", cell, width=LINE_PX)
     for enemy in enemies:
         if enemy.direction == 1:
             pygame.draw.rect(screen, "#FFFF80", (enemy.x + enemy_length, \
@@ -155,7 +160,8 @@ while is_running:
         (enemy_length * enemy.anim_frame, enemy_height * enemy.animation, \
         enemy_length, enemy_height))
     for terrain in level:
-        pygame.draw.rect(screen, "#B80000", terrain)
+        screen.blit(terrain_image, terrain, \
+        (0, 0, terrain.width, terrain.height))
         pygame.draw.rect(screen, "#000000", terrain, width=LINE_PX)
     for plank in planks:
         pygame.draw.rect(screen, "#804000", plank)
@@ -172,13 +178,35 @@ while is_running:
                 if event.type == pygame.QUIT:
                     is_running = False
             keys = pygame.key.get_pressed()
+            if keys[pygame.K_q]:
+                is_running = False
             if keys[pygame.K_r]:
                 left_load, left_x, left_y, right_load, right_x, right_y \
                 = load_level(STARTING_LEVEL)
                 x_pos, y_pos = get_startpos(STARTING_LEVEL)
                 is_gameover = False
                 break
-            delta = clock.tick(30) / 1000
+            delta = clock.tick(FRAMERATE) / 1000
+
+    if keys[pygame.K_SPACE] and is_grounded:
+        if is_hidden:
+            is_hidden = False
+            animation = 0
+            anim_frame = 0
+            frame_delay = MAX_FRAME_DELAY
+        is_grounded = False
+        fall_speed = -JUMP_VELOCITY
+        y_pos += fall_speed * delta
+
+    if keys[pygame.K_UP] and is_grounded:
+        for cell in cells:
+            if (x_pos + 4 > cell.left and x_pos + P_LENGTH < cell.right + 4 \
+            and y_pos > cell.top and y_pos + P_HEIGHT < cell.bottom + 4):
+                x_pos = cell.left + cell.width // 2 - P_LENGTH // 2
+                animation = 2
+                anim_frame = 0
+                is_hidden = True
+                break
 
     if is_grounded:
         is_grounded = False
@@ -192,13 +220,11 @@ while is_running:
     if not is_grounded:
         fall_speed += GRAVITY * delta
         y_pos += fall_speed * delta
-        if y_pos > W_HEIGHT:
-            is_gameover = True
 
         if fall_speed > 0:
             for platform in (level + planks):
                 if (y_pos + P_HEIGHT >= platform.top \
-                and y_pos < platform.top \
+                and y_pos + P_HEIGHT - fall_speed * delta <= platform.top \
                 and x_pos + P_LENGTH > platform.left \
                 and x_pos < platform.right):
                     is_grounded = True
@@ -211,8 +237,11 @@ while is_running:
                 and y_pos + P_HEIGHT > terrain.bottom \
                 and x_pos + P_LENGTH > terrain.left \
                 and x_pos < terrain.right):
-                    fall_speed *= -0.5
+                    fall_speed *= -0.4
                     y_pos = terrain.bottom
+
+        if y_pos > W_HEIGHT:
+            is_gameover = True
 
     if keys[pygame.K_LEFT]:
         x_pos -= MOVE_SPEED * delta
@@ -269,21 +298,6 @@ while is_running:
         anim_frame = 0
         frame_delay = MAX_FRAME_DELAY
 
-    if keys[pygame.K_SPACE] and is_grounded and not is_hidden:
-        is_grounded = False
-        fall_speed = -JUMP_VELOCITY
-        y_pos += fall_speed * delta
-
-    if keys[pygame.K_UP] and is_grounded:
-        for cell in cells:
-            if (x_pos + 4 > cell.left and x_pos + P_LENGTH < cell.right + 4 \
-            and y_pos > cell.top and y_pos + P_HEIGHT < cell.bottom + 4):
-                x_pos = cell.left + cell.width // 2 - P_LENGTH // 2
-                animation = 2
-                anim_frame = 0
-                is_hidden = True
-                break
-
     for spike in spikes:
         spike.delay -= delta
         if spike.delay <= 0.0:
@@ -318,6 +332,6 @@ while is_running:
                 is_gameover = not is_hidden
 
     pygame.display.flip()
-    delta = clock.tick(30) / 1000
+    delta = clock.tick(FRAMERATE) / 1000
 
 pygame.quit()

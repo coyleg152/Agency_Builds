@@ -15,7 +15,7 @@ clock = pygame.time.Clock()
 is_running = True
 delta = 0
 
-character = pygame.image.load("Images/PixelGarchomp.png")
+character = pygame.image.load("Images/Placeholder.png")
 x_pos = 0
 y_pos = 0
 fall_speed = 0
